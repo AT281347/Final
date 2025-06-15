@@ -3,10 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-export default supabase;
-/* if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
@@ -31,6 +28,7 @@ export type Database = {
         Row: {
           id: string
           email: string
+          password: string
           name: string
           phone: string | null
           role: 'CUSTOMER' | 'OWNER' | 'ADMIN'
@@ -43,6 +41,7 @@ export type Database = {
         Insert: {
           id?: string
           email: string
+          password: string
           name: string
           phone?: string | null
           role?: 'CUSTOMER' | 'OWNER' | 'ADMIN'
@@ -55,6 +54,7 @@ export type Database = {
         Update: {
           id?: string
           email?: string
+          password?: string
           name?: string
           phone?: string | null
           role?: 'CUSTOMER' | 'OWNER' | 'ADMIN'
@@ -250,6 +250,73 @@ export type Database = {
           updated_at?: string
         }
       }
+      payments: {
+        Row: {
+          id: string
+          booking_id: string
+          amount: number
+          method: 'CREDIT_CARD' | 'DEBIT_CARD' | 'QR_PAYMENT' | 'E_WALLET'
+          status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+          transaction_id: string | null
+          processed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          amount: number
+          method: 'CREDIT_CARD' | 'DEBIT_CARD' | 'QR_PAYMENT' | 'E_WALLET'
+          status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+          transaction_id?: string | null
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          amount?: number
+          method?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'QR_PAYMENT' | 'E_WALLET'
+          status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+          transaction_id?: string | null
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          message: string
+          type: string
+          is_read: boolean
+          data: any
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          message: string
+          type: string
+          is_read?: boolean
+          data?: any
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          message?: string
+          type?: string
+          is_read?: boolean
+          data?: any
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -261,4 +328,6 @@ export type Database = {
       [_ in never]: never
     }
   }
-} */
+}
+
+export default supabase

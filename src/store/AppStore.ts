@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import supabase  from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import type { ParkingSpot, Booking, User, Vehicle } from '../types';
 
 interface AppState {
@@ -135,6 +135,48 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth actions
   login: async (email: string, password: string) => {
     try {
+      // For demo purposes, we'll simulate login with the seeded data
+      // In production, you'd use proper Supabase auth
+      
+      // Check if it's a demo account
+      const demoAccounts = {
+        'admin@parkpass.com': { role: 'ADMIN', id: 'user-admin-1', name: 'Admin User' },
+        'owner1@parkpass.com': { role: 'OWNER', id: 'user-owner-1', name: 'John Smith' },
+        'owner2@parkpass.com': { role: 'OWNER', id: 'user-owner-2', name: 'Sarah Johnson' },
+        'customer1@parkpass.com': { role: 'CUSTOMER', id: 'user-customer-1', name: 'Mike Wilson' },
+        'customer2@parkpass.com': { role: 'CUSTOMER', id: 'user-customer-2', name: 'Emily Davis' }
+      };
+
+      const demoAccount = demoAccounts[email as keyof typeof demoAccounts];
+      
+      if (demoAccount && password === 'demo123') {
+        // Simulate successful login
+        set({
+          isAuthenticated: true,
+          user: {
+            id: demoAccount.id,
+            name: demoAccount.name,
+            email: email,
+            phone: '+1-555-0000',
+            vehicles: []
+          },
+          userType: demoAccount.role as 'CUSTOMER' | 'OWNER' | 'ADMIN'
+        });
+
+        // Fetch initial data
+        await get().fetchParkingSpots();
+        if (demoAccount.role === 'CUSTOMER') {
+          await get().fetchVehicles();
+          await get().fetchBookings();
+        } else if (demoAccount.role === 'OWNER' || demoAccount.role === 'ADMIN') {
+          await get().fetchBookings();
+        }
+        
+        return;
+      }
+
+      // For real authentication, uncomment this:
+      /*
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -173,6 +215,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
         }
       }
+      */
+      
+      throw new Error('Invalid credentials');
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -208,7 +253,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (error) throw error;
 
-      const spots: ParkingSpot[] = data.map(spot => ({
+      const spots: ParkingSpot[] = (data || []).map(spot => ({
         id: spot.id,
         name: spot.name,
         description: spot.description || '',
@@ -283,7 +328,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (error) throw error;
 
-      const bookings: Booking[] = data.map(booking => ({
+      const bookings: Booking[] = (data || []).map(booking => ({
         id: booking.id,
         spotId: booking.spot_id,
         userId: booking.user_id,
@@ -319,7 +364,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (error) throw error;
 
-      const vehicles: Vehicle[] = data.map(vehicle => ({
+      const vehicles: Vehicle[] = (data || []).map(vehicle => ({
         id: vehicle.id,
         make: vehicle.make,
         model: vehicle.model,
