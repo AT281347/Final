@@ -135,10 +135,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth actions
   login: async (email: string, password: string) => {
     try {
-      // For demo purposes, we'll simulate login with the seeded data
-      // In production, you'd use proper Supabase auth
-      
-      // Check if it's a demo account
+      // Check if it's a demo account with seeded data
       const demoAccounts = {
         'admin@parkpass.com': { role: 'ADMIN', id: 'user-admin-1', name: 'Admin User' },
         'owner1@parkpass.com': { role: 'OWNER', id: 'user-owner-1', name: 'John Smith' },
@@ -150,33 +147,40 @@ export const useAppStore = create<AppState>((set, get) => ({
       const demoAccount = demoAccounts[email as keyof typeof demoAccounts];
       
       if (demoAccount && password === 'demo123') {
-        // Simulate successful login
-        set({
-          isAuthenticated: true,
-          user: {
-            id: demoAccount.id,
-            name: demoAccount.name,
-            email: email,
-            phone: '+1-555-0000',
-            vehicles: []
-          },
-          userType: demoAccount.role as 'CUSTOMER' | 'OWNER' | 'ADMIN'
-        });
+        // For demo accounts, fetch from database
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .single();
 
-        // Fetch initial data
-        await get().fetchParkingSpots();
-        if (demoAccount.role === 'CUSTOMER') {
-          await get().fetchVehicles();
-          await get().fetchBookings();
-        } else if (demoAccount.role === 'OWNER' || demoAccount.role === 'ADMIN') {
-          await get().fetchBookings();
+        if (userData && !error) {
+          set({
+            isAuthenticated: true,
+            user: {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              phone: userData.phone || '',
+              vehicles: []
+            },
+            userType: userData.role as 'CUSTOMER' | 'OWNER' | 'ADMIN'
+          });
+
+          // Fetch initial data
+          await get().fetchParkingSpots();
+          if (userData.role === 'CUSTOMER') {
+            await get().fetchVehicles();
+            await get().fetchBookings();
+          } else if (userData.role === 'OWNER' || userData.role === 'ADMIN') {
+            await get().fetchBookings();
+          }
+          
+          return;
         }
-        
-        return;
       }
 
-      // For real authentication, uncomment this:
-      /*
+      // For real authentication with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -215,9 +219,6 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
         }
       }
-      */
-      
-      throw new Error('Invalid credentials');
     } catch (error) {
       console.error('Login error:', error);
       throw error;

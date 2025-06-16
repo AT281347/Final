@@ -20,7 +20,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Database types (auto-generated from your schema)
+// Database types matching your schema
 export type Database = {
   public: {
     Tables: {
